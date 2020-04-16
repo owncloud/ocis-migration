@@ -1,15 +1,22 @@
 package command
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/owncloud/ocis-migration/pkg/migrate"
 	"io/ioutil"
 	"os"
 	"path"
 
+	"github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
+	"github.com/cs3org/reva/pkg/token"
 	"github.com/micro/cli/v2"
+	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-micro/v2/client/grpc"
 	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
 	"github.com/owncloud/ocis-migration/pkg/config"
+	grpc2 "google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type user struct {
@@ -55,8 +62,8 @@ func Import(cfg *config.Config) *cli.Command {
 			}
 
 			userMetaDataPath := path.Join(importPath, "user.json")
-
 			data, err := ioutil.ReadFile(userMetaDataPath)
+
 			if err != nil {
 				logger.Fatal().Err(err).Msgf("Could not read file")
 			}
@@ -65,6 +72,41 @@ func Import(cfg *config.Config) *cli.Command {
 			if err := json.Unmarshal(data, u); err != nil {
 				logger.Fatal().Err(err).Msgf("Could not decode json")
 			}
+
+			svc, err := registry.GetService("com.owncloud.reva")
+			if err != nil {
+				logger.Fatal().Err(err).Msgf("Service not found")
+			}
+
+			addr := svc[0].Nodes[0].Address
+			conn, err := grpc2.Dial(addr, grpc2.WithInsecure())
+			if err != nil {
+				logger.Fatal().Err(err).Msgf("Service not reachable")
+			}
+
+			gwClient := gatewayv1beta1.NewGatewayAPIClient(conn)
+
+			resp, err := gwClient.Authenticate(c.Context, &gatewayv1beta1.AuthenticateRequest{
+				Type:         "basic",
+				ClientId:     "einstein",
+				ClientSecret: "relativity",
+			})
+
+			if err != nil {
+				logger.Fatal().Err(err).Msgf("Could not authenticate")
+			}
+
+			t := resp.GetToken()
+
+			ctx := token.ContextSetToken(context.Background(), t)
+			ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, t)
+
+			err = migrate.ImportMetadata(ctx, gwClient, importPath, "/")
+			if err != nil {
+				logger.Fatal().Err(err).Msg("Importing metadata failed")
+			}
+
+			_ = resp
 
 			ss := accounts.NewSettingsService("com.owncloud.accounts", grpc.NewClient())
 			_, err = ss.Set(c.Context, &accounts.Record{
