@@ -86,6 +86,7 @@ func Import(cfg *config.Config) *cli.Command {
 
 			gwClient := gatewayv1beta1.NewGatewayAPIClient(conn)
 
+			//TODO: MintToken from authbasic secret
 			resp, err := gwClient.Authenticate(c.Context, &gatewayv1beta1.AuthenticateRequest{
 				Type:         "basic",
 				ClientId:     "einstein",
@@ -101,12 +102,15 @@ func Import(cfg *config.Config) *cli.Command {
 			ctx := token.ContextSetToken(context.Background(), t)
 			ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, t)
 
-			err = migrate.ImportMetadata(ctx, gwClient, importPath, "/")
+			err = migrate.ImportMetadata(ctx, gwClient, importPath, "/home")
 			if err != nil {
 				logger.Fatal().Err(err).Msg("Importing metadata failed")
 			}
 
-			_ = resp
+			err = migrate.ImportShares(ctx, gwClient, importPath, "/home")
+			if err != nil {
+				logger.Fatal().Err(err).Msg("Importing shares failed")
+			}
 
 			ss := accounts.NewSettingsService("com.owncloud.accounts", grpc.NewClient())
 			_, err = ss.Set(c.Context, &accounts.Record{
