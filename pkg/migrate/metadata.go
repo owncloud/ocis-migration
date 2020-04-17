@@ -53,7 +53,7 @@ func ImportMetadata(ctx context.Context, client gateway.GatewayAPIClient, export
 		//TODO permissions? is done via share? but this is owner permissions
 
 		if len(m) > 0 {
-			resourcePath := path.Join(ns, path.Base(exportPath), strings.TrimPrefix(fileData.Path, "/files/"))
+			resourcePath := path.Join(ns, strings.TrimPrefix(fileData.Path, "/files/"))
 			samReq := &storageprovider.SetArbitraryMetadataRequest{
 				Ref: &storageprovider.Reference{
 					Spec: &storageprovider.Reference_Path{Path: resourcePath},
