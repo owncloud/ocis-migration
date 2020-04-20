@@ -3,20 +3,22 @@ package command
 import (
 	"context"
 	"encoding/json"
-	"github.com/owncloud/ocis-migration/pkg/migrate"
-	"io/ioutil"
-	"os"
-	"path"
-
 	"github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
+	revauser "github.com/cs3org/go-cs3apis/cs3/identity/user/v1beta1"
 	"github.com/cs3org/reva/pkg/token"
+	"github.com/cs3org/reva/pkg/token/manager/jwt"
 	"github.com/micro/cli/v2"
 	"github.com/micro/go-micro/registry"
 	"github.com/micro/go-micro/v2/client/grpc"
 	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
 	"github.com/owncloud/ocis-migration/pkg/config"
-	grpc2 "google.golang.org/grpc"
+	"github.com/owncloud/ocis-migration/pkg/flagset"
+	"github.com/owncloud/ocis-migration/pkg/migrate"
+	googlegrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"io/ioutil"
+	"os"
+	"path"
 )
 
 type user struct {
@@ -36,14 +38,7 @@ func Import(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "import",
 		Usage: "Import a user",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "import-path",
-				Usage:   "Path to exported user-directory",
-				Value:   "",
-				EnvVars: []string{"MIGRATION_IMPORT_PATH"},
-			},
-		},
+		Flags: flagset.ImportWithConfig(cfg),
 		Action: func(c *cli.Context) error {
 			logger := NewLogger(cfg)
 
@@ -79,36 +74,41 @@ func Import(cfg *config.Config) *cli.Command {
 			}
 
 			addr := svc[0].Nodes[0].Address
-			conn, err := grpc2.Dial(addr, grpc2.WithInsecure())
+			conn, err := googlegrpc.Dial(addr, googlegrpc.WithInsecure())
 			if err != nil {
-				logger.Fatal().Err(err).Msgf("Service not reachable")
+				logger.Fatal().Err(err).Msgf("Reva not reachable")
 			}
 
-			gwClient := gatewayv1beta1.NewGatewayAPIClient(conn)
+			gatewayClient := gatewayv1beta1.NewGatewayAPIClient(conn)
 
-			//TODO: MintToken from authbasic secret
-			resp, err := gwClient.Authenticate(c.Context, &gatewayv1beta1.AuthenticateRequest{
-				Type:         "basic",
-				ClientId:     "einstein",
-				ClientSecret: "relativity",
+			tokenManager, err := jwt.New(map[string]interface{}{
+				"secret":  c.String("jwt-secret"),
+				"expires": int64(99999999999),
 			})
 
 			if err != nil {
-				logger.Fatal().Err(err).Msgf("Could not authenticate")
+				logger.Fatal().Err(err).Msgf("Could not load token-manager")
 			}
 
-			t := resp.GetToken()
+			t, err := tokenManager.MintToken(c.Context, &revauser.User{
+				Id: &revauser.UserId{
+					OpaqueId: u.User.UserID,
+				},
+				Username: u.User.UserID,
+			})
+
+			if err != nil {
+				logger.Fatal().Err(err).Msgf("Error minting token")
+			}
 
 			ctx := token.ContextSetToken(context.Background(), t)
 			ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, t)
 
-			err = migrate.ImportMetadata(ctx, gwClient, importPath, "/home")
-			if err != nil {
+			if err := migrate.ImportMetadata(ctx, gatewayClient, importPath, "/home"); err != nil {
 				logger.Fatal().Err(err).Msg("Importing metadata failed")
 			}
 
-			err = migrate.ImportShares(ctx, gwClient, importPath, "/home")
-			if err != nil {
+			if err := migrate.ImportShares(ctx, gatewayClient, importPath, "/home"); err != nil {
 				logger.Fatal().Err(err).Msg("Importing shares failed")
 			}
 
