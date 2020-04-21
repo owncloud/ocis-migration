@@ -104,13 +104,17 @@ func Import(cfg *config.Config) *cli.Command {
 			ctx := token.ContextSetToken(context.Background(), t)
 			ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, t)
 
-			if err := migrate.ImportMetadata(ctx, gatewayClient, importPath, "/home"); err != nil {
-				logger.Fatal().Err(err).Msg("Importing metadata failed")
-			}
+			migrate.ForEachFile(path.Join(importPath, "files.jsonl"), func(metaData *migrate.FilesMetaData) {
+				if err := migrate.ImportMetadata(ctx, gatewayClient, "/home", *metaData); err != nil {
+					logger.Fatal().Err(err).Msg("Importing files metadata failed")
+				}
+			})
 
-			if err := migrate.ImportShares(ctx, gatewayClient, importPath, "/home"); err != nil {
-				logger.Fatal().Err(err).Msg("Importing shares failed")
-			}
+			migrate.ForEachShare(path.Join(importPath, "shares.jsonl"), func(metaData *migrate.ShareMetaData) {
+				if err := migrate.ImportShare(ctx, gatewayClient, "/home", metaData); err != nil {
+					logger.Fatal().Err(err).Msg("Importing shares metadata failed")
+				}
+			})
 
 			ss := accounts.NewSettingsService("com.owncloud.accounts", grpc.NewClient())
 			_, err = ss.Set(c.Context, &accounts.Record{

@@ -15,8 +15,8 @@ import (
 	provider "github.com/cs3org/go-cs3apis/cs3/storage/provider/v1beta1"
 )
 
-// share representation in the import metadata
-type share struct {
+// ShareMetaData representation in the import metadata
+type ShareMetaData struct {
 	Path           string `json:"path"`
 	ShareType      string `json:"shareType"`
 	Type           string `json:"type"`
@@ -30,50 +30,35 @@ type share struct {
 	Token          string `json:"token"`
 }
 
-//ImportShares from a shares.jsonl file in exportPath. The files must already be present on the storage
-func ImportShares(ctx context.Context, client gateway.GatewayAPIClient, exportPath string, ns string) error {
+//ImportShare from a shares.jsonl file in exportPath. The files must already be present on the storage
+func ImportShare(ctx context.Context, client gateway.GatewayAPIClient, ns string, shareData *ShareMetaData) error {
+	//Stat file, skip ShareMetaData creation if it does not exist on the target system
+	resourcePath := path.Join(ns, shareData.Path)
+	statReq := &provider.StatRequest{
+		Ref: &provider.Reference{
+			Spec: &provider.Reference_Path{Path: resourcePath},
+		},
+	}
+	statResp, err := client.Stat(ctx, statReq)
 
-	sharesJSONL, err := os.Open(path.Join(exportPath, "shares.jsonl"))
 	if err != nil {
 		return err
 	}
-	defer sharesJSONL.Close()
-	jsonLines := bufio.NewScanner(sharesJSONL)
 
-	for jsonLines.Scan() {
-		var shareData share
-		if err := json.Unmarshal(jsonLines.Bytes(), &shareData); err != nil {
-			log.Fatal(err)
-			return err
-		}
-
-		//Stat file, skip share creation if it does not exist on the target system
-		resourcePath := path.Join(ns, shareData.Path)
-		statReq := &provider.StatRequest{
-			Ref: &provider.Reference{
-				Spec: &provider.Reference_Path{Path: resourcePath},
-			},
-		}
-		statResp, err := client.Stat(ctx, statReq)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if statResp.Status.Code == rpc.Code_CODE_NOT_FOUND {
-			log.Print("File does not exist on target system, skipping share import: " + resourcePath)
-			continue
-		}
-
-		_, err = client.CreateShare(ctx, shareReq(statResp.Info, &shareData))
-		if err != nil {
-			return err
-		}
+	if statResp.Status.Code == rpc.Code_CODE_NOT_FOUND {
+		log.Print("File does not exist on target system, skipping share import: " + resourcePath)
+		return nil
 	}
+
+	_, err = client.CreateShare(ctx, shareReq(statResp.Info, shareData))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func shareReq(info *provider.ResourceInfo, share *share) *collaboration.CreateShareRequest {
+func shareReq(info *provider.ResourceInfo, share *ShareMetaData) *collaboration.CreateShareRequest {
 	return &collaboration.CreateShareRequest{
 		ResourceInfo: info,
 		Grant: &collaboration.ShareGrant{
@@ -133,4 +118,22 @@ func convertPermissions(ocPermissions int) *provider.ResourcePermissions {
 	}
 
 	return perms
+}
+
+func ForEachShare(path string, fn func(metaData *ShareMetaData)) {
+	filesJSONL, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer filesJSONL.Close()
+	jsonLines := bufio.NewScanner(filesJSONL)
+	for jsonLines.Scan() {
+		var f ShareMetaData
+		if err := json.Unmarshal(jsonLines.Bytes(), &f); err != nil {
+			log.Fatal(err)
+		}
+
+		fn(&f)
+	}
 }
