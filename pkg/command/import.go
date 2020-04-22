@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
 	revauser "github.com/cs3org/go-cs3apis/cs3/identity/user/v1beta1"
 	"github.com/cs3org/reva/pkg/token"
@@ -68,18 +69,10 @@ func Import(cfg *config.Config) *cli.Command {
 				logger.Fatal().Err(err).Msgf("Could not decode json")
 			}
 
-			svc, err := registry.GetService("com.owncloud.reva")
+			gatewayClient, err := connectToReva()
 			if err != nil {
-				logger.Fatal().Err(err).Msgf("Service not found")
+				logger.Fatal().Err(err).Msg("Could not connect to reva")
 			}
-
-			addr := svc[0].Nodes[0].Address
-			conn, err := googlegrpc.Dial(addr, googlegrpc.WithInsecure())
-			if err != nil {
-				logger.Fatal().Err(err).Msgf("Reva not reachable")
-			}
-
-			gatewayClient := gatewayv1beta1.NewGatewayAPIClient(conn)
 
 			tokenManager, err := jwt.New(map[string]interface{}{
 				"secret":  c.String("jwt-secret"),
@@ -105,7 +98,7 @@ func Import(cfg *config.Config) *cli.Command {
 			ctx := token.ContextSetToken(context.Background(), t)
 			ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, t)
 
-			// Import file-metadata
+			logger.Debug().Msg("Importing files-metadata")
 			migrate.ForEachFile(path.Join(importPath, "files.jsonl"), func(metaData *migrate.FilesMetaData) {
 				t, err := tokenManager.MintToken(c.Context, user)
 				if err != nil {
@@ -118,7 +111,7 @@ func Import(cfg *config.Config) *cli.Command {
 				}
 			})
 
-			// Import shares
+			logger.Debug().Msg("Importing shares-metadata")
 			migrate.ForEachShare(path.Join(importPath, "shares.jsonl"), func(metaData *migrate.ShareMetaData) {
 				t, err := tokenManager.MintToken(c.Context, user)
 				if err != nil {
@@ -131,6 +124,7 @@ func Import(cfg *config.Config) *cli.Command {
 				}
 			})
 
+			logger.Debug().Msg("Creating entry in com.owncloud.accounts")
 			ss := accounts.NewSettingsService("com.owncloud.accounts", grpc.NewClient())
 			_, err = ss.Set(c.Context, &accounts.Record{
 				Key: u.User.UserID,
@@ -147,4 +141,27 @@ func Import(cfg *config.Config) *cli.Command {
 
 			return nil
 		}}
+}
+
+func connectToReva() (gatewayv1beta1.GatewayAPIClient, error) {
+	svc, err := registry.GetService("com.owncloud.reva")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(svc) < 1 {
+		return nil, fmt.Errorf("service 'com.owncloud.reva not found")
+	}
+
+	if len(svc[0].Nodes) < 1 {
+		return nil, fmt.Errorf("no nodes for service 'com.owncloud.reva found")
+	}
+
+	addr := svc[0].Nodes[0].Address
+	conn, err := googlegrpc.Dial(addr, googlegrpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+
+	return gatewayv1beta1.NewGatewayAPIClient(conn), nil
 }
