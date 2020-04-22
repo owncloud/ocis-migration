@@ -65,6 +65,7 @@ func ImportMetadata(ctx context.Context, client gateway.GatewayAPIClient, ns str
 	return nil
 }
 
+// ForEachFile is a callback iterator for files.jsonl created by owncloud data_exporter app
 func ForEachFile(path string, fn func(metaData *FilesMetaData)) {
 	filesJSONL, err := os.Open(path)
 	if err != nil {

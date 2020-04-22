@@ -120,6 +120,7 @@ func convertPermissions(ocPermissions int) *provider.ResourcePermissions {
 	return perms
 }
 
+//ForEachShare is a callback iterator for shares.jsonl created by owncloud data_exporter app
 func ForEachShare(path string, fn func(metaData *ShareMetaData)) {
 	sharesJSONL, err := os.Open(path)
 	if err != nil {

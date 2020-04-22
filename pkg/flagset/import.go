@@ -5,7 +5,7 @@ import (
 	"github.com/owncloud/ocis-migration/pkg/config"
 )
 
-// RootWithConfig applies cfg to the root flagset
+// ImportWithConfig applies cfg to the import-command
 func ImportWithConfig(cfg *config.Config) []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
