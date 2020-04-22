@@ -83,20 +83,21 @@ func Import(cfg *config.Config) *cli.Command {
 
 			tokenManager, err := jwt.New(map[string]interface{}{
 				"secret":  c.String("jwt-secret"),
-				"expires": int64(99999999999),
+				"expires": int64(10),
 			})
 
 			if err != nil {
 				logger.Fatal().Err(err).Msgf("Could not load token-manager")
 			}
 
-			t, err := tokenManager.MintToken(c.Context, &revauser.User{
+			user := &revauser.User{
 				Id: &revauser.UserId{
 					OpaqueId: u.User.UserID,
 				},
 				Username: u.User.UserID,
-			})
+			}
 
+			t, err := tokenManager.MintToken(c.Context, user)
 			if err != nil {
 				logger.Fatal().Err(err).Msgf("Error minting token")
 			}
@@ -104,14 +105,28 @@ func Import(cfg *config.Config) *cli.Command {
 			ctx := token.ContextSetToken(context.Background(), t)
 			ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, t)
 
+			// Import file-metadata
 			migrate.ForEachFile(path.Join(importPath, "files.jsonl"), func(metaData *migrate.FilesMetaData) {
-				if err := migrate.ImportMetadata(ctx, gatewayClient, "/home", *metaData); err != nil {
+				t, err := tokenManager.MintToken(c.Context, user)
+				if err != nil {
+					logger.Fatal().Err(err).Msgf("Error minting token")
+				}
+
+				logger.Debug().Interface("file", metaData).Msg("File imported")
+				if err := migrate.ImportMetadata(token.ContextSetToken(ctx, t), gatewayClient, "/home", *metaData); err != nil {
 					logger.Fatal().Err(err).Msg("Importing files metadata failed")
 				}
 			})
 
+			// Import shares
 			migrate.ForEachShare(path.Join(importPath, "shares.jsonl"), func(metaData *migrate.ShareMetaData) {
-				if err := migrate.ImportShare(ctx, gatewayClient, "/home", metaData); err != nil {
+				t, err := tokenManager.MintToken(c.Context, user)
+				if err != nil {
+					logger.Fatal().Err(err).Msgf("Error minting token")
+				}
+
+				logger.Debug().Interface("share", metaData).Msg("Share imported")
+				if err := migrate.ImportShare(token.ContextSetToken(ctx, t), gatewayClient, "/home", metaData); err != nil {
 					logger.Fatal().Err(err).Msg("Importing shares metadata failed")
 				}
 			})
