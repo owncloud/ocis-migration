@@ -121,13 +121,13 @@ func convertPermissions(ocPermissions int) *provider.ResourcePermissions {
 }
 
 func ForEachShare(path string, fn func(metaData *ShareMetaData)) {
-	filesJSONL, err := os.Open(path)
+	sharesJSONL, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer filesJSONL.Close()
-	jsonLines := bufio.NewScanner(filesJSONL)
+	defer sharesJSONL.Close()
+	jsonLines := bufio.NewScanner(sharesJSONL)
 	for jsonLines.Scan() {
 		var f ShareMetaData
 		if err := json.Unmarshal(jsonLines.Bytes(), &f); err != nil {
