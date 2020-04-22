@@ -16,11 +16,10 @@ func ImportWithConfig(cfg *config.Config) []cli.Flag {
 			EnvVars:  []string{"MIGRATION_IMPORT_PATH"},
 		},
 		&cli.StringFlag{
-			Name:        "jwt-secret",
-			Value:       "Pive-Fumkiu4",
-			Usage:       "Used to create JWT to talk to reva, should equal reva's jwt-secret",
-			EnvVars:     []string{"MIGRATION_JWT_SECRET"},
-			Destination: &cfg.Log.Level,
+			Name:    "jwt-secret",
+			Value:   "Pive-Fumkiu4",
+			Usage:   "Used to create JWT to talk to reva, should equal reva's jwt-secret",
+			EnvVars: []string{"MIGRATION_JWT_SECRET"},
 		},
 	}
 }
