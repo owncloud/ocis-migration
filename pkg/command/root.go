@@ -19,7 +19,7 @@ func Execute() error {
 	app := &cli.App{
 		Name:     "ocis-migration",
 		Version:  version.String,
-		Usage:    "Migrate users",
+		Usage:    "Migrate user exported oc10 data_exporter app",
 		Compiled: version.Compiled(),
 
 		Authors: []*cli.Author{
