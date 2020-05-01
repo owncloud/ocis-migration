@@ -37,6 +37,7 @@ func Execute() error {
 
 		Commands: []*cli.Command{
 			Import(cfg),
+			Test(cfg),
 		},
 	}
 

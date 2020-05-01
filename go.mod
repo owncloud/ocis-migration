@@ -15,3 +15,5 @@ require (
 	github.com/spf13/viper v1.6.1
 	google.golang.org/grpc v1.28.1
 )
+
+replace google.golang.org/grpc => google.golang.org/grpc v1.26.0

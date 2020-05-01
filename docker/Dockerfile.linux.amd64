@@ -13,7 +13,8 @@ LABEL maintainer="ownCloud GmbH <devops@owncloud.com>" \
 
 EXPOSE 9110 9114
 
-ENTRYPOINT ["/usr/bin/ocis-migration"]
-CMD ["server"]
+#ENTRYPOINT ["/usr/bin/ocis-migration"]
+#CMD ["server"]
 
-COPY bin/ocis-migration /usr/bin/ocis-migration
+#COPY bin/ocis-migration /usr/bin/ocis-migration
+COPY dist/binaries/ocis-migration-testing-linux-amd64 /usr/bin/ocis-migration
