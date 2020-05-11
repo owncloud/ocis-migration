@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
+	"io/ioutil"
+	"os"
+	"path"
+
+	gatewayv1beta1 "github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
 	revauser "github.com/cs3org/go-cs3apis/cs3/identity/user/v1beta1"
 	"github.com/cs3org/reva/pkg/token"
 	"github.com/cs3org/reva/pkg/token/manager/jwt"
@@ -17,9 +21,6 @@ import (
 	"github.com/owncloud/ocis-migration/pkg/migrate"
 	googlegrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"io/ioutil"
-	"os"
-	"path"
 )
 
 type user struct {
@@ -125,7 +126,7 @@ func Import(cfg *config.Config) *cli.Command {
 			})
 
 			logger.Debug().Msg("Creating entry in com.owncloud.accounts")
-			ss := accounts.NewSettingsService("com.owncloud.accounts", grpc.NewClient())
+			ss := accounts.NewAccountsService("com.owncloud.accounts", grpc.NewClient())
 			_, err = ss.Set(c.Context, &accounts.Record{
 				Key: u.User.UserID,
 				Payload: &accounts.Payload{
