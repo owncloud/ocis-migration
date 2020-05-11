@@ -673,6 +673,8 @@ github.com/ory/go-convenience v0.1.0/go.mod h1:uEY/a60PL5c12nYz4V5cHY03IBmwIAEm8
 github.com/ovh/go-ovh v0.0.0-20181109152953-ba5adb4cf014/go.mod h1:joRatxRJaZBsY3JAOEMcoOp05CnZzsx4scTxi95DHyQ=
 github.com/owncloud/ocis-accounts v0.1.0 h1:6YjvRWNW26QHOqOFONg0HeogxhxaVGS1S2AoCUgzE3M=
 github.com/owncloud/ocis-accounts v0.1.0/go.mod h1:eoOPfuFCJ23n2csSMzapfjzVhG2kt8sQ2tu/9J+SwsA=
+github.com/owncloud/ocis-accounts v0.1.2-0.20200511104221-f537f420c409 h1:pMRaeSU/8nE4+PmYTzCQERJAhLvZb9OMkRcaU20mXVc=
+github.com/owncloud/ocis-accounts v0.1.2-0.20200511104221-f537f420c409/go.mod h1:ltC+eLvLEuIVmcGc4dwkg+24Nl7PvyqlnZp/pH8Lg8k=
 github.com/owncloud/ocis-hello v0.0.0-20200114105804-61741477dcec/go.mod h1:hrXqmloO2NHbdkDTPSNneobwzQgki8CUuQD8fqjkPv8=
 github.com/owncloud/ocis-hello v0.1.0-alpha1/go.mod h1:tU2bOB7DjuXZ+ju+5A+7pUHmTfPIYUk3tMflqHTBTpE=
 github.com/owncloud/ocis-pkg v1.2.1-0.20191217084055-eab942498596 h1:3aMNmuDCIdKsaa4YdVTQEBJMjGz8KiuIB/+xlJUCT3k=
@@ -681,6 +683,7 @@ github.com/owncloud/ocis-pkg/v2 v2.0.1 h1:3ISEtfjAz4pDFczTggIJwKuft3bVsAp1C7dFY9
 github.com/owncloud/ocis-pkg/v2 v2.0.1/go.mod h1:7bVnn3VUaqdmvpMkXF0QVEF1fRugs35hSkuVTAq9yjk=
 github.com/owncloud/ocis-pkg/v2 v2.2.1 h1:LK7WxHYugEFQ9NHTOz0EP8DRjbt51wXhyqruV03z6zI=
 github.com/owncloud/ocis-pkg/v2 v2.2.1/go.mod h1:MXv7QzsYsu4YWuyJxhq1kLLmJa/r5gbqHe1FXulMHaw=
+github.com/owncloud/ocis-settings v0.0.0-20200511093940-0fddb624d0da/go.mod h1:1PyfbVIZMTX21JxsRT+maRIjRFD3H+yhfpr1jMz3PeA=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c h1:rp5dCmg/yLR3mgFuSOe4oEnDDmGLROTvMragMUXpTQw=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c/go.mod h1:X07ZCGwUbLaax7L0S3Tw4hpejzu63ZrrQiUe6W0hcy0=
 github.com/parnurzeal/gorequest v0.2.15/go.mod h1:3Kh2QUMJoqw3icWAecsyzkpY7UzRfDhbRdTjtNwNiUE=

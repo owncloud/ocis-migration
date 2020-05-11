@@ -9,13 +9,9 @@ require (
 	github.com/micro/cli/v2 v2.1.2
 	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-micro/v2 v2.0.1-0.20200212105717-d76baf59de2e
-	github.com/owncloud/ocis-accounts v0.1.0
+	github.com/owncloud/ocis-accounts v0.1.2-0.20200511104221-f537f420c409
 	github.com/owncloud/ocis-pkg/v2 v2.2.1
 	github.com/restic/calens v0.2.0
 	github.com/spf13/viper v1.6.3
 	google.golang.org/grpc v1.28.1
 )
-
-replace github.com/owncloud/ocis-accounts => ../ocis-accounts
-
-replace github.com/owncloud/ocis-settings => ../ocis-settings
