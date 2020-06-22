@@ -127,12 +127,10 @@ func Import(cfg *config.Config) *cli.Command {
 
 			logger.Debug().Msg("Creating entry in com.owncloud.accounts")
 			ss := accounts.NewAccountsService("com.owncloud.accounts", grpc.NewClient())
-			_, err = ss.Set(c.Context, &accounts.Record{
-				Key: u.User.UserID,
-				Payload: &accounts.Payload{
-					Account: &accounts.Account{
-						StandardClaims: nil,
-					},
+			_, err = ss.CreateAccount(c.Context, &accounts.CreateAccountRequest{
+				Account: &accounts.Account{
+					// TODO really use the old username as the uuid? it would be unique, but only in the scope of this instance. shouldn't we be able to roll a new uuid?
+					Id: u.User.UserID,
 				},
 			})
 
