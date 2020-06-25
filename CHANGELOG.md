@@ -1,4 +1,27 @@
-# Changes in 0.1.0
+# Changelog for [0.2.0] (2020-06-25)
+
+The following sections list the changes in ocis-migration 0.2.0.
+
+[0.2.0]: https://github.com/owncloud/ocis-migration/compare/v0.1.0...v0.2.0
+
+## Summary
+
+* Change - Use latest ocis-accounts API: [#6](https://github.com/owncloud/ocis-migration/pull/6)
+
+## Details
+
+* Change - Use latest ocis-accounts API: [#6](https://github.com/owncloud/ocis-migration/pull/6)
+
+   Uses the latest ocis-accounts API with some adjustments.
+
+   https://github.com/owncloud/ocis-migration/pull/6
+   https://github.com/owncloud/ocis-migration/pull/8
+
+# Changelog for [0.1.0] (2020-05-05)
+
+The following sections list the changes in ocis-migration 0.1.0.
+
+[0.1.0]: https://github.com/owncloud/ocis-migration/compare/0ec9b9a4d47a809e443a0527c9554f0d23883cab...v0.1.0
 
 ## Summary
 
