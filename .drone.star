@@ -411,9 +411,9 @@ def manifest(ctx):
             },
         ],
         "depends_on": [
-            "amd64",
-            "arm64",
-            "arm",
+            "docker-amd64",
+            "docker-arm64",
+            "docker-arm",
             "linux",
             "darwin",
             "windows",
