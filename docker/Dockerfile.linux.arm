@@ -1,6 +1,9 @@
 FROM arm32v6/alpine:3.13
 
-RUN apk update
+RUN apk update && \
+	apk add ca-certificates mailcap && \
+	rm -rf /var/cache/apk/* && \
+	echo 'hosts: files dns' >| /etc/nsswitch.conf
 
 LABEL maintainer="ownCloud GmbH <devops@owncloud.com>" \
   org.label-schema.name="oCIS Migration" \

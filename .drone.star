@@ -181,7 +181,7 @@ def docker(ctx, arch):
             },
             {
                 "name": "dryrun",
-                "image": "plugins/docker:18.09",
+                "image": "plugins/docker:latest",
                 "pull": "always",
                 "settings": {
                     "dry_run": True,
@@ -199,7 +199,7 @@ def docker(ctx, arch):
             },
             {
                 "name": "docker",
-                "image": "plugins/docker:18.09",
+                "image": "plugins/docker:latest",
                 "pull": "always",
                 "settings": {
                     "username": {
