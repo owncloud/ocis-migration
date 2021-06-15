@@ -145,7 +145,7 @@ def docker(ctx, arch):
     return {
         "kind": "pipeline",
         "type": "docker",
-        "name": arch,
+        "name": "docker-%s" % (arch),
         "platform": {
             "os": "linux",
             "arch": arch,
