@@ -16,7 +16,6 @@ def main(ctx):
     manifest(ctx),
     changelog(ctx),
     readme(ctx),
-    badges(ctx),
     website(ctx),
   ]
 
@@ -242,43 +241,29 @@ def docker(ctx, arch):
   }
 
 def binary(ctx, name):
-  if ctx.build.event == "tag":
+  # uploads binary to https://download.owncloud.com/ocis/migration/testing/
+    target = "/ocis/%s/testing" % (ctx.repo.name.replace("ocis-", ""))
+    if ctx.build.event == "tag":
+        # uploads binary to eg. https://download.owncloud.com/ocis/migration/1.0.0-beta9/
+        target = "/ocis/%s/%s" % (ctx.repo.name.replace("ocis-", ""), ctx.build.ref.replace("refs/tags/v", ""))
+
     settings = {
-      'endpoint': {
-        'from_secret': 's3_endpoint',
-      },
-      'access_key': {
-        'from_secret': 'aws_access_key_id',
-      },
-      'secret_key': {
-        'from_secret': 'aws_secret_access_key',
-      },
-      'bucket': {
-        'from_secret': 's3_bucket',
-      },
-      'path_style': True,
-      'strip_prefix': 'dist/release/',
-      'source': 'dist/release/*',
-      'target': '/ocis/%s/%s' % (ctx.repo.name.replace("ocis-", ""), ctx.build.ref.replace("refs/tags/v", "")),
-    }
-  else:
-    settings = {
-      'endpoint': {
-        'from_secret': 's3_endpoint',
-      },
-      'access_key': {
-        'from_secret': 'aws_access_key_id',
-      },
-      'secret_key': {
-        'from_secret': 'aws_secret_access_key',
-      },
-      'bucket': {
-        'from_secret': 's3_bucket',
-      },
-      'path_style': True,
-      'strip_prefix': 'dist/release/',
-      'source': 'dist/release/*',
-      'target': '/ocis/%s/testing' % (ctx.repo.name.replace("ocis-", "")),
+        "endpoint": {
+            "from_secret": "upload_s3_endpoint",
+        },
+        "access_key": {
+            "from_secret": "upload_s3_access_key",
+        },
+        "secret_key": {
+            "from_secret": "upload_s3_secret_key",
+        },
+        "bucket": {
+            "from_secret": "upload_s3_bucket",
+        },
+        "path_style": True,
+        "strip_prefix": "dist/release/",
+        "source": "dist/release/*",
+        "target": target,
     }
 
   return {
@@ -551,57 +536,24 @@ def readme(ctx):
     },
     'steps': [
       {
-        'name': 'execute',
-        'image': 'sheogorath/readme-to-dockerhub:latest',
-        'pull': 'always',
-        'environment': {
-          'DOCKERHUB_USERNAME': {
-            'from_secret': 'docker_username',
+          "name": "execute",
+          "image": "chko/docker-pushrm:1",
+          "pull": "always",
+          "environment": {
+              "DOCKER_USER": {
+                  "from_secret": "docker_username",
+              },
+              "DOCKER_PASS": {
+                  "from_secret": "docker_password",
+              },
+              "PUSHRM_TARGET": "owncloud/${DRONE_REPO_NAME}",
+              "PUSHRM_SHORT": "Docker images for %s" % (ctx.repo.name),
+              "PUSHRM_FILE": "README.md",
           },
-          'DOCKERHUB_PASSWORD': {
-            'from_secret': 'docker_password',
-          },
-          'DOCKERHUB_REPO_PREFIX': ctx.repo.namespace,
-          'DOCKERHUB_REPO_NAME': ctx.repo.name,
-          'SHORT_DESCRIPTION': 'Docker images for %s' % (ctx.repo.name),
-          'README_PATH': 'README.md',
-        },
       },
     ],
     'depends_on': [
       'changelog',
-    ],
-    'trigger': {
-      'ref': [
-        'refs/heads/master',
-        'refs/tags/**',
-      ],
-    },
-  }
-
-def badges(ctx):
-  return {
-    'kind': 'pipeline',
-    'type': 'docker',
-    'name': 'badges',
-    'platform': {
-      'os': 'linux',
-      'arch': 'amd64',
-    },
-    'steps': [
-      {
-        'name': 'execute',
-        'image': 'plugins/webhook:1',
-        'pull': 'always',
-        'settings': {
-          'urls': {
-            'from_secret': 'microbadger_url',
-          },
-        },
-      },
-    ],
-    'depends_on': [
-      'readme',
     ],
     'trigger': {
       'ref': [
@@ -669,7 +621,7 @@ def website(ctx):
         'name': 'downstream',
         'image': 'plugins/downstream',
         'settings': {
-          'server': 'https://cloud.drone.io/',
+          'server': 'https://drone.owncloud.com/',
           'token': {
             'from_secret': 'drone_token',
           },
@@ -686,9 +638,7 @@ def website(ctx):
         },
       },
     ],
-    'depends_on': [
-      'badges',
-    ],
+    'depends_on': [],
     'trigger': {
       'ref': [
         'refs/heads/master',
