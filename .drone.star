@@ -582,7 +582,7 @@ def website(ctx):
             },
             {
                 "name": "test",
-                "image": "webhippie/hugo:latest",
+                "image": "owncloudci/hugo:0.71.0",
                 "commands": [
                     "cd hugo",
                     "hugo",
@@ -638,7 +638,9 @@ def website(ctx):
                 },
             },
         ],
-        "depends_on": [],
+        "depends_on": [
+            "readme",
+        ],
         "trigger": {
             "ref": [
                 "refs/heads/master",
