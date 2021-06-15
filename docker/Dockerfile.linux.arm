@@ -1,7 +1,6 @@
-FROM arm32v6/alpine:latest
+FROM arm32v6/alpine:3.13
 
 RUN apk update && \
-	apk upgrade && \
 	apk add ca-certificates mailcap && \
 	rm -rf /var/cache/apk/* && \
 	echo 'hosts: files dns' >| /etc/nsswitch.conf
